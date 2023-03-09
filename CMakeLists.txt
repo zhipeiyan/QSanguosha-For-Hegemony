@@ -329,7 +329,7 @@ set(INCLUDEPATH
 
 set(OTHER_FILES
         ui-script/animation.qml
-        builds/sanguosha.ts)
+        sanguosha.ts)
 
 add_compile_definitions(AUDIO_SUPPORT)
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")

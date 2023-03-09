@@ -391,9 +391,10 @@ function isAvailable_AOE(self, player)
 	local canUse = false;
 	local players = player:getSiblings()
 	for _, p in sgs.qlist(players) do
-		if p:isDead() --[[or player:isProhibited(p, self)]] then continue end
-		canUse = true
-		break
+		if not p:isDead() --[[or player:isProhibited(p, self)]] then
+		    canUse = true
+		    break
+		end
 	end
 	return canUse and self:cardIsAvailable(player);
 end
@@ -432,9 +433,10 @@ function isAvailable_GlobalEffect(self, player)
 	local players = player:getSiblings()
 	players:append(player)
 	for _, p in sgs.qlist(players) do
-		if p:isDead() --[[or player:isProhibited(p, self)]] then continue end
-		canUse = true
-		break
+		if not p:isDead() --[[or player:isProhibited(p, self)]] then
+		    canUse = true
+		    break
+		end
 	end
 	return canUse and self:cardIsAvailable(player);
 end
@@ -721,21 +723,19 @@ function sgs.CreateArraySummonSkill(spec)
 				local asked = n
 				for i = 1, n - 1, 1 do
 					local target = player:getNextAlive(i)
-					if player:isFriendWith(target) then
-						continue
-					elseif not target:hasShownOneGeneral() then
-						return true
-					else
-						asked = i
-						break
+					if not player:isFriendWith(target) then
+                        if not target:hasShownOneGeneral() then
+                            return true
+                        else
+                            asked = i
+                            break
+                        end
 					end
 				end
 				n = n - asked
 				for i = 1, n - 1, 1 do
 					local target = player:getLastAlive(i)
-					if player:isFriendWith(target) then
-						continue
-					else
+					if not player:isFriendWith(target) then
 						return not target:hasShownOneGeneral()
 					end
 				end

@@ -1,9 +1,10 @@
 local hash = {wei = {},shu = {},wu = {},qun = {}}
 for _,general in pairs(sgs.Sanguosha:getLimitedGeneralNames())do
-	if general:startsWith("lord_") then continue end
-	if hash[sgs.Sanguosha:getGeneral(general):getKingdom()] then
-		table.insert(hash[sgs.Sanguosha:getGeneral(general):getKingdom()],general)
-	end
+	if not general:startsWith("lord_") then
+        if hash[sgs.Sanguosha:getGeneral(general):getKingdom()] then
+            table.insert(hash[sgs.Sanguosha:getGeneral(general):getKingdom()],general)
+        end
+    end
 end
 function getRandomGenerals (n,kingdom,exceptions)
 	hash[kingdom] = table.Shuffle(hash[kingdom])

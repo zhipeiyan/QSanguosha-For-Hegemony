@@ -3,7 +3,6 @@ release/
 GeneratedFiles/
 Makefile*
 *.pro.user
-sanguosha.qm
 config.ini
 records/*
 .DS_Store

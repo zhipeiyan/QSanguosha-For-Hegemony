@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(Qt5 COMPONENTS Widgets Network REQUIRED)
+find_package(Lua REQUIRED)
+find_package(Freetype REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -271,8 +273,8 @@ set(OTHER_FILES
 
 add_compile_definitions(AUDIO_SUPPORT GPP)
 
-add_subdirectory(3rd-party/freetype-2.9)
-add_subdirectory(3rd-party/lua-5.4.4)
+#add_subdirectory(3rd-party/freetype-2.9)
+#add_subdirectory(3rd-party/lua-5.4.4)
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     set(FMNAME "fmodexL")
 else()
@@ -303,6 +305,6 @@ set_target_properties(fmodex PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR}/3rd-party/fmodex/include)
 
 add_executable(QSanguosha ${SOURCES} ${HEADERS} ${FORMS} ${OTHER_FILES})
-target_include_directories(QSanguosha PRIVATE ${INCLUDEPATH} ${CMAKE_SOURCE_DIR}/3rd-party/freetype-2.9/include)
-target_link_libraries(QSanguosha Qt5::Widgets Qt5::Network lua freetype fmodex)
-add_dependencies(QSanguosha lua freetype fmodex)
+target_include_directories(QSanguosha PRIVATE ${INCLUDEPATH} ${LUA_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build})
+target_link_libraries(QSanguosha Qt5::Widgets Qt5::Network lua5.4 freetype fmodex)
+add_dependencies(QSanguosha fmodex)

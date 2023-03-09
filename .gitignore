@@ -13,7 +13,6 @@ QSanguosha
 QSanguosha-bin*
 debugQSanguosha
 /tools/
-Bin/
 /extensions
 *~
 *.kdev4
@@ -41,3 +40,4 @@ src/bot_version.cpp
 .idea
 cmake-build*
 Qt5*.dll
+/build

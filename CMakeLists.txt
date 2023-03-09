@@ -306,5 +306,5 @@ set_target_properties(fmodex PROPERTIES
 
 add_executable(QSanguosha ${SOURCES} ${HEADERS} ${FORMS} ${OTHER_FILES})
 target_include_directories(QSanguosha PRIVATE ${INCLUDEPATH} ${LUA_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build})
-target_link_libraries(QSanguosha Qt5::Widgets Qt5::Network lua5.4 freetype fmodex)
+target_link_libraries(QSanguosha Qt5::Widgets Qt5::Network ${LUA_LIBRARY} ${FREETYPE_LIBRARY} fmodex)
 add_dependencies(QSanguosha fmodex)

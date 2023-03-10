@@ -328,6 +328,7 @@ set(INCLUDEPATH
         src/util)
 
 set(OTHER_FILES
+        style-sheet/sanguosha.qss
         ui-script/animation.qml
         sanguosha.ts)
 

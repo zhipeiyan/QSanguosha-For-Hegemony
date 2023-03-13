@@ -253,21 +253,23 @@ sgs.ai_skill_choice.huashen = function(self, choice, data)
 
 	for _, name1 in ipairs(names) do
 		local g1 = sgs.Sanguosha:getGeneral(name1)
-		if not g1 then continue end
-		--[[
-		for _, skill in sgs.qlist(g1:getVisibleSkillList(true, head)) do
-			if skill:getFrequency() == sgs.Skill_Limited and skill:getLimitMark() ~= "" and self.player:getMark(skill:getLimitMark()) == 0 and self.player:hasSkill(skill:objectName()) then
-				ajust1 = ajust1 - 1
-			end
-		end
-		--]]
-		for _, name2 in ipairs(names) do
-			local g2 = sgs.Sanguosha:getGeneral(name2)
-			if not g2 or g1:getKingdom() ~= g2:getKingdom() or name1 == name2 then continue end
-			local points = self:getHuashenPairValue(g1, g2)
-			max_point = math.max(max_point, points)
-			if max_point == points then pair = name1 .. "+" .. name2 end
-		end
+		if g1 then
+            --[[
+            for _, skill in sgs.qlist(g1:getVisibleSkillList(true, head)) do
+                if skill:getFrequency() == sgs.Skill_Limited and skill:getLimitMark() ~= "" and self.player:getMark(skill:getLimitMark()) == 0 and self.player:hasSkill(skill:objectName()) then
+                    ajust1 = ajust1 - 1
+                end
+            end
+            --]]
+            for _, name2 in ipairs(names) do
+                local g2 = sgs.Sanguosha:getGeneral(name2)
+                if g2 and g1:getKingdom() == g2:getKingdom() and name1 ~= name2 then
+                    local points = self:getHuashenPairValue(g1, g2)
+                    max_point = math.max(max_point, points)
+                    if max_point == points then pair = name1 .. "+" .. name2 end
+                end
+            end
+        end
 	end
 	self.player:speak("结果是：" .. pair)
 	return pair
@@ -557,10 +559,11 @@ xuanlue_skill.getTurnUseCard = function(self)
 		p:setFlags("-xuanlue_gotoffensivehorse")
 		p:setFlags("-xuanlue_gotdefensivehorse")
 		p:setFlags("-xuanlue_gottreasure")
-		if p:objectName() == self.player:objectName() then continue end
-		if self.player:canGetCard(p, "e") then
-			table.insert(targets, p)
-		end
+		if p:objectName() ~= self.player:objectName() then
+            if self.player:canGetCard(p, "e") then
+                table.insert(targets, p)
+            end
+        end
 	end
 
 	for _, p in ipairs(targets) do
@@ -794,65 +797,68 @@ sgs.ai_skill_use["@@diaodu_equip"] = function(self, prompt)
 		end
 	end
 	for _, p in ipairs(self.friends_noself) do
-		if not self.player:isFriendWith(p) then continue end
-		for _, card in sgs.qlist(self.player:getCards("h")) do
-			if card:isKindOf("Weapon") and self.player:getWeapon() then
-				return "@DiaoduequipCard=" .. self.player:getWeapon():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
-			end
-			if card:isKindOf("Armor") and self.player:getArmor() and not (self.player:getArmor():isKindOf("PeaceSpell") and self:isWeak()) then
-				return "@DiaoduequipCard=" .. self.player:getArmor():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
-			end
-			if card:isKindOf("OffensiveHorse") and self.player:getOffensiveHorse() then
-				return "@DiaoduequipCard=" .. self.player:getOffensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
-			end
-			if card:isKindOf("DefensiveHorse") and self.player:getDefensiveHorse() then
-				return "@DiaoduequipCard=" .. self.player:getDefensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
-			end
-			if card:isKindOf("Treasure") and self.player:getTreasure() and (not self.player:getArmor():isKindOf("WoodenOx") and self.player:getPile("wooden_ox"):length() > 1) then
-				return "@DiaoduequipCard=" .. self.player:getTreasure():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
-			end
-		end
+		if self.player:isFriendWith(p) then
+            for _, card in sgs.qlist(self.player:getCards("h")) do
+                if card:isKindOf("Weapon") and self.player:getWeapon() then
+                    return "@DiaoduequipCard=" .. self.player:getWeapon():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
+                end
+                if card:isKindOf("Armor") and self.player:getArmor() and not (self.player:getArmor():isKindOf("PeaceSpell") and self:isWeak()) then
+                    return "@DiaoduequipCard=" .. self.player:getArmor():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
+                end
+                if card:isKindOf("OffensiveHorse") and self.player:getOffensiveHorse() then
+                    return "@DiaoduequipCard=" .. self.player:getOffensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
+                end
+                if card:isKindOf("DefensiveHorse") and self.player:getDefensiveHorse() then
+                    return "@DiaoduequipCard=" .. self.player:getDefensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
+                end
+                if card:isKindOf("Treasure") and self.player:getTreasure() and (not self.player:getArmor():isKindOf("WoodenOx") and self.player:getPile("wooden_ox"):length() > 1) then
+                    return "@DiaoduequipCard=" .. self.player:getTreasure():getEffectiveId() .. "&diaoduequip->" .. p:objectName()
+                end
+            end
+        end
 	end
 	if self.player:hasSkills(sgs.lose_equip_skill) then
 		for _, card in sgs.qlist(self.player:getCards("e")) do
 			for _, p in ipairs(self.friends_noself) do
-				if not self.player:isFriendWith(p) then continue end
-				if card:isKindOf("Armor") and not p:getArmor() and not(card:isKindOf("PeaceSpell") and self:isWeak()) then
-					return ("@DiaoduequipCard=" .. self.player:getArmor():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-				end
-				if card:isKindOf("OffensiveHorse") and not p:getOffensiveHorse() then
-					return ("@DiaoduequipCard=" .. self.player:getOffensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-				end
-				if card:isKindOf("DefensiveHorse") and not p:getDefensiveHorse() then
-					return ("@DiaoduequipCard=" .. self.player:getDefensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-				end
-				if card:isKindOf("Treasure") and not p:getTreasure() and (not self.player:getArmor():isKindOf("WoodenOx") and self.player:getPile("wooden_ox"):length() > 1) then
-					return ("@DiaoduequipCard=" .. self.player:getTreasure():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-				end
-				if card:isKindOf("Weapon") and not p:getWeapon() then
-					return ("@DiaoduequipCard=" .. self.player:getWeapon():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-				end
+				if self.player:isFriendWith(p) then
+                    if card:isKindOf("Armor") and not p:getArmor() and not(card:isKindOf("PeaceSpell") and self:isWeak()) then
+                        return ("@DiaoduequipCard=" .. self.player:getArmor():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                    end
+                    if card:isKindOf("OffensiveHorse") and not p:getOffensiveHorse() then
+                        return ("@DiaoduequipCard=" .. self.player:getOffensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                    end
+                    if card:isKindOf("DefensiveHorse") and not p:getDefensiveHorse() then
+                        return ("@DiaoduequipCard=" .. self.player:getDefensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                    end
+                    if card:isKindOf("Treasure") and not p:getTreasure() and (not self.player:getArmor():isKindOf("WoodenOx") and self.player:getPile("wooden_ox"):length() > 1) then
+                        return ("@DiaoduequipCard=" .. self.player:getTreasure():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                    end
+                    if card:isKindOf("Weapon") and not p:getWeapon() then
+                        return ("@DiaoduequipCard=" .. self.player:getWeapon():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                    end
+                end
 			end
 		end
 	end
 	for _, card in sgs.qlist(self.player:getCards("e")) do
 		for _, p in ipairs(self.friends_noself) do
-			if not self.player:isFriendWith(p) or not self:hasSkill(sgs.need_equip_skill .. "|" .. sgs.lose_equip_skill, p) then continue end
-			if card:isKindOf("Armor") and not p:getArmor() and not(card:isKindOf("PeaceSpell") and self:isWeak()) then
-				return ("@DiaoduequipCard=" .. self.player:getArmor():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-			end
-			if card:isKindOf("OffensiveHorse") and not p:getOffensiveHorse() then
-				return ("@DiaoduequipCard=" .. self.player:getOffensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-			end
-			if card:isKindOf("DefensiveHorse") and not p:getDefensiveHorse() then
-				return ("@DiaoduequipCard=" .. self.player:getDefensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-			end
-			if card:isKindOf("Treasure") and not p:getTreasure() and (not self.player:getArmor():isKindOf("WoodenOx") and self.player:getPile("wooden_ox"):length() > 1) then
-				return ("@DiaoduequipCard=" .. self.player:getTreasure():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-			end
-			if card:isKindOf("Weapon") and not p:getWeapon() then
-				return ("@DiaoduequipCard=" .. self.player:getWeapon():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
-			end
+			if self.player:isFriendWith(p) and self:hasSkill(sgs.need_equip_skill .. "|" .. sgs.lose_equip_skill, p) then
+                if card:isKindOf("Armor") and not p:getArmor() and not(card:isKindOf("PeaceSpell") and self:isWeak()) then
+                    return ("@DiaoduequipCard=" .. self.player:getArmor():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                end
+                if card:isKindOf("OffensiveHorse") and not p:getOffensiveHorse() then
+                    return ("@DiaoduequipCard=" .. self.player:getOffensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                end
+                if card:isKindOf("DefensiveHorse") and not p:getDefensiveHorse() then
+                    return ("@DiaoduequipCard=" .. self.player:getDefensiveHorse():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                end
+                if card:isKindOf("Treasure") and not p:getTreasure() and (not self.player:getArmor():isKindOf("WoodenOx") and self.player:getPile("wooden_ox"):length() > 1) then
+                    return ("@DiaoduequipCard=" .. self.player:getTreasure():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                end
+                if card:isKindOf("Weapon") and not p:getWeapon() then
+                    return ("@DiaoduequipCard=" .. self.player:getWeapon():getEffectiveId() .. "&diaoduequip->" .. p:objectName())
+                end
+            end
 		end
 	end
 

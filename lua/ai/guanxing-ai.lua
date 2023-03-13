@@ -80,36 +80,39 @@ local function GuanXing(self, cards)
 		local lightning_index
 		for judge_count, need_judge in ipairs(judge) do
 			judged_list[judge_count] = 0
+			local special_cases = false
 			if need_judge:isKindOf("Lightning") then
 				lightning_index = judge_count
 				has_lightning = need_judge
-				continue
+				special_cases = true
 			elseif need_judge:isKindOf("Indulgence") then
 				willSkipPlayPhase = true
-				if self.player:isSkipped(sgs.Player_Play) then continue end
+				if self.player:isSkipped(sgs.Player_Play) then special_cases = true end
 			elseif need_judge:isKindOf("SupplyShortage") then
 				willSkipDrawPhase = true
-				if self.player:isSkipped(sgs.Player_Draw) then continue end
+				if self.player:isSkipped(sgs.Player_Draw) then special_cases = true end
 			end
-			local judge_str = sgs.ai_judgestring[need_judge:objectName()]
-			if not judge_str then
-				self.room:writeToConsole(debug.traceback())
-				judge_str = sgs.ai_judgestring[need_judge:getSuitString()]
-			end
-			for index, for_judge in ipairs(bottom) do
-				local suit = for_judge:getSuitString()
-				if self.player:hasSkill("hongyan") and suit == "spade" then suit = "heart" end
-				if judge_str == suit then
-					table.insert(up, for_judge)
-					table.remove(bottom, index)
-					judged_list[judge_count] = 1
-					self_has_judged = true
-					if need_judge:isKindOf("SupplyShortage") then willSkipDrawPhase = false
-					elseif need_judge:isKindOf("Indulgence") then willSkipPlayPhase = false
-					end
-					break
-				end
-			end
+			if not special_cases then
+                local judge_str = sgs.ai_judgestring[need_judge:objectName()]
+                if not judge_str then
+                    self.room:writeToConsole(debug.traceback())
+                    judge_str = sgs.ai_judgestring[need_judge:getSuitString()]
+                end
+                for index, for_judge in ipairs(bottom) do
+                    local suit = for_judge:getSuitString()
+                    if self.player:hasSkill("hongyan") and suit == "spade" then suit = "heart" end
+                    if judge_str == suit then
+                        table.insert(up, for_judge)
+                        table.remove(bottom, index)
+                        judged_list[judge_count] = 1
+                        self_has_judged = true
+                        if need_judge:isKindOf("SupplyShortage") then willSkipDrawPhase = false
+                        elseif need_judge:isKindOf("Indulgence") then willSkipPlayPhase = false
+                        end
+                        break
+                    end
+                end
+            end
 		end
 
 		if lightning_index then
@@ -601,29 +604,29 @@ function SmartAI:getValuableCardForGuanxing(cards, up_cards)
 	local weapon, crossbow, halberd, double, qinggang, axe, gudingdao
 
 	for _, card in ipairs(cards) do
-		if card:isKindOf("Weapon") and ignore_weapon and not card:isKindOf("Crossbow") then continue
-		elseif card:isKindOf("Armor") and ignore_armor then continue
-		elseif card:isKindOf("DefensiveHorse") and ignore_DH then continue
-		elseif card:isKindOf("OffensiveHorse") and ignore_OH then continue
-		end
+		if not (card:isKindOf("Weapon") and ignore_weapon and not card:isKindOf("Crossbow"))
+            and not (card:isKindOf("Armor") and ignore_armor)
+            and not (card:isKindOf("DefensiveHorse") and ignore_DH)
+            and not (card:isKindOf("OffensiveHorse") and ignore_OH) then
 
-		if card:isKindOf("EightDiagram") then eightdiagram = card
-		elseif card:isKindOf("SilverLion") then silverlion = card
-		elseif card:isKindOf("Vine") then vine = card
-		elseif card:isKindOf("RenwangShield") then renwang = card
-		elseif card:isKindOf("IronArmor") then ironarmor = card
+            if card:isKindOf("EightDiagram") then eightdiagram = card
+            elseif card:isKindOf("SilverLion") then silverlion = card
+            elseif card:isKindOf("Vine") then vine = card
+            elseif card:isKindOf("RenwangShield") then renwang = card
+            elseif card:isKindOf("IronArmor") then ironarmor = card
 
-		elseif card:isKindOf("DefensiveHorse") and not self:getSameEquip(card) then DefHorse = card
-		elseif card:isKindOf("OffensiveHorse") and not self:getSameEquip(card) then OffHorse = card
+            elseif card:isKindOf("DefensiveHorse") and not self:getSameEquip(card) then DefHorse = card
+            elseif card:isKindOf("OffensiveHorse") and not self:getSameEquip(card) then OffHorse = card
 
-		elseif card:isKindOf("Crossbow") then crossbow = card
-		elseif card:isKindOf("DoubleSword") then double = card
-		elseif card:isKindOf("QinggangSword") then qinggang = card
-		elseif card:isKindOf("Halberd") then halberd = card
-		elseif card:isKindOf("GudingBlade") then gudingdao = card
-		elseif card:isKindOf("Axe") then axe = card end
+            elseif card:isKindOf("Crossbow") then crossbow = card
+            elseif card:isKindOf("DoubleSword") then double = card
+            elseif card:isKindOf("QinggangSword") then qinggang = card
+            elseif card:isKindOf("Halberd") then halberd = card
+            elseif card:isKindOf("GudingBlade") then gudingdao = card
+            elseif card:isKindOf("Axe") then axe = card end
 
-		if not weapon and card:isKindOf("Weapon") then weapon = card end
+            if not weapon and card:isKindOf("Weapon") then weapon = card end
+        end
 	end
 
 	if eightdiagram then

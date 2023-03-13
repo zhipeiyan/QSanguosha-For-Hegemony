@@ -109,35 +109,43 @@ sgs.ai_skill_use_func.RendeCard = function(card, use, self)
 			end
 		end
 
-		if friend:objectName() == self.player:objectName() or not self.player:getHandcards():contains(card) then continue end
+		if friend:objectName() ~= self.player:objectName() and self.player:getHandcards():contains(card) then
+            local skip = false
+            if card:isAvailable(self.player) and (card:isKindOf("Slash") or card:isKindOf("Duel") or card:isKindOf("Snatch") or card:isKindOf("Dismantlement")) then
+                local dummy_use = { isDummy = true, to = sgs.SPlayerList() }
+                local cardtype = card:getTypeId()
+                self["use" .. sgs.ai_type_name[cardtype + 1] .. "Card"](self, card, dummy_use)
+                if dummy_use.card and dummy_use.to:length() > 0 then
+                    if card:isKindOf("Slash") or card:isKindOf("Duel") then
+                        local t1 = dummy_use.to:first()
+                        if dummy_use.to:length() > 1 then
+                            skip = true
+                        elseif t1:getHp() == 1 or sgs.card_lack[t1:objectName()]["Jink"] == 1 or t1:isCardLimited(sgs.cloneCard("jink"), sgs.Card_MethodResponse) then
+                            skip = true
+                        end
+                    elseif (card:isKindOf("Snatch") or card:isKindOf("Dismantlement")) and self:getEnemyNumBySeat(self.player, friend) > 0 then
+                        local hasDelayedTrick
+                        for _, p in sgs.qlist(dummy_use.to) do
+                            if self:isFriend(p) and (self:willSkipDrawPhase(p) or self:willSkipPlayPhase(p)) then hasDelayedTrick = true break end
+                        end
+                        if hasDelayedTrick then
+                            skip = true
+                        end
+                    end
+                end
+            elseif card:isAvailable(self.player) and self:getEnemyNumBySeat(self.player, friend) > 0 and (card:isKindOf("Indulgence") or card:isKindOf("SupplyShortage")) then
+                local dummy_use = { isDummy = true }
+                self:useTrickCard(card, dummy_use)
+                if dummy_use.card then
+                    skip = true
+                end
+            end
 
-		if card:isAvailable(self.player) and (card:isKindOf("Slash") or card:isKindOf("Duel") or card:isKindOf("Snatch") or card:isKindOf("Dismantlement")) then
-			local dummy_use = { isDummy = true, to = sgs.SPlayerList() }
-			local cardtype = card:getTypeId()
-			self["use" .. sgs.ai_type_name[cardtype + 1] .. "Card"](self, card, dummy_use)
-			if dummy_use.card and dummy_use.to:length() > 0 then
-				if card:isKindOf("Slash") or card:isKindOf("Duel") then
-					local t1 = dummy_use.to:first()
-					if dummy_use.to:length() > 1 then continue
-					elseif t1:getHp() == 1 or sgs.card_lack[t1:objectName()]["Jink"] == 1
-							or t1:isCardLimited(sgs.cloneCard("jink"), sgs.Card_MethodResponse) then continue
-					end
-				elseif (card:isKindOf("Snatch") or card:isKindOf("Dismantlement")) and self:getEnemyNumBySeat(self.player, friend) > 0 then
-					local hasDelayedTrick
-					for _, p in sgs.qlist(dummy_use.to) do
-						if self:isFriend(p) and (self:willSkipDrawPhase(p) or self:willSkipPlayPhase(p)) then hasDelayedTrick = true break end
-					end
-					if hasDelayedTrick then continue end
-				end
-			end
-		elseif card:isAvailable(self.player) and self:getEnemyNumBySeat(self.player, friend) > 0 and (card:isKindOf("Indulgence") or card:isKindOf("SupplyShortage")) then
-			local dummy_use = { isDummy = true }
-			self:useTrickCard(card, dummy_use)
-			if dummy_use.card then continue end
-		end
-
-		use.card = sgs.Card_Parse("@RendeCard=" .. card:getId() .. "&rende")
-		if use.to then use.to:append(friend) return end
+            if not skip then
+                use.card = sgs.Card_Parse("@RendeCard=" .. card:getId() .. "&rende")
+                if use.to then use.to:append(friend) return end
+            end
+        end
 	end
 
 end

@@ -43,8 +43,9 @@ function sgs.isGoodHp(player, observer)
 	else
 		local n = 0
 		for _, friend in ipairs(sgs.recorder:getFriends(player)) do
-			if global_room:getCurrent():hasShownSkill("wansha") and player:objectName() ~= friend:objectName() then continue end
-			n = n + getCardsNum("Peach", friend, observer)
+			if not global_room:getCurrent():hasShownSkill("wansha") or player:objectName() == friend:objectName() then
+			    n = n + getCardsNum("Peach", friend, observer)
+            end
 		end
 		return n > 0
 	end
@@ -513,65 +514,67 @@ function SmartAI:useCardSlash(card, use)
 			and not (not self:isWeak(target) and #self.enemies > 1 and #self.friends > 1 and self.player:hasSkill("keji")
 			and self:getOverflow() > 0 and not self:hasCrossbowEffect()) then
 
+            local isGood = true
 			if target:getHp() > 1 and target:hasShownSkill("jianxiong") and self.player:hasWeapon("Spear") and card:getSkillName() == "Spear" then
-				local ids, isGood = card:getSubcards(), true
+				local ids = card:getSubcards()
 				for _, id in sgs.qlist(ids) do
 					local c = sgs.Sanguosha:getCard(id)
 					if isCard("Peach", c, target) or isCard("Analeptic", c, target) then isGood = false break end
 				end
-				if not isGood then continue end
 			end
 
-			-- fill the card use struct
-			local usecard = card
-			if not use.to or use.to:isEmpty() then
-				if self.player:hasWeapon("Spear") and card:getSkillName() == "Spear" then
-				elseif self.player:hasWeapon("Crossbow") and self:getCardsNum("Slash") > 0 then
-				elseif not use.isDummy then
-					local weapon = self:findWeaponToUse(target)
-					if weapon then
-						use.card = weapon
-						return
-					end
-				end
+            if isGood then
+                -- fill the card use struct
+                local usecard = card
+                if not use.to or use.to:isEmpty() then
+                    if self.player:hasWeapon("Spear") and card:getSkillName() == "Spear" then
+                    elseif self.player:hasWeapon("Crossbow") and self:getCardsNum("Slash") > 0 then
+                    elseif not use.isDummy then
+                        local weapon = self:findWeaponToUse(target)
+                        if weapon then
+                            use.card = weapon
+                            return
+                        end
+                    end
 
-				if target:isChained() and self:isGoodChainTarget(target, nil, nil, nil, card) and not use.card then
-					if self:hasCrossbowEffect() and card:isKindOf("NatureSlash") then
-						for _, slash in ipairs(self:getCards("Slash")) do
-							if not slash:isKindOf("NatureSlash") and self:slashIsEffective(slash, target)
-								and not self:slashProhibit(slash, target) then
-								usecard = slash
-								break
-							end
-						end
-					elseif not card:isKindOf("NatureSlash") then
-						local slash = self:getCard("NatureSlash")
-						if slash and self:slashIsEffective(slash, target) and not self:slashProhibit(slash, target) then usecard = slash end
-					end
-				end
-				local godsalvation = self:getCard("GodSalvation")
-				if not use.isDummy and godsalvation and godsalvation:getId() ~= card:getId() and self:willUseGodSalvation(godsalvation) and
-					(not target:isWounded() or not self:hasTrickEffective(godsalvation, target, self.player)) then
-					use.card = godsalvation
-					return
-				end
-			end
+                    if target:isChained() and self:isGoodChainTarget(target, nil, nil, nil, card) and not use.card then
+                        if self:hasCrossbowEffect() and card:isKindOf("NatureSlash") then
+                            for _, slash in ipairs(self:getCards("Slash")) do
+                                if not slash:isKindOf("NatureSlash") and self:slashIsEffective(slash, target)
+                                    and not self:slashProhibit(slash, target) then
+                                    usecard = slash
+                                    break
+                                end
+                            end
+                        elseif not card:isKindOf("NatureSlash") then
+                            local slash = self:getCard("NatureSlash")
+                            if slash and self:slashIsEffective(slash, target) and not self:slashProhibit(slash, target) then usecard = slash end
+                        end
+                    end
+                    local godsalvation = self:getCard("GodSalvation")
+                    if not use.isDummy and godsalvation and godsalvation:getId() ~= card:getId() and self:willUseGodSalvation(godsalvation) and
+                        (not target:isWounded() or not self:hasTrickEffective(godsalvation, target, self.player)) then
+                        use.card = godsalvation
+                        return
+                    end
+                end
 
-			use.card = use.card or usecard
-			if not use.isDummy then
-				local analeptic = self:searchForAnaleptic(use, target, use.card or usecard)
-				if analeptic and self:shouldUseAnaleptic(target, use) and analeptic:getEffectiveId() ~= card:getEffectiveId() then
-					use.card = analeptic
-					if use.to then use.to = sgs.SPlayerList() end
-					return
-				end
-			end
+                use.card = use.card or usecard
+                if not use.isDummy then
+                    local analeptic = self:searchForAnaleptic(use, target, use.card or usecard)
+                    if analeptic and self:shouldUseAnaleptic(target, use) and analeptic:getEffectiveId() ~= card:getEffectiveId() then
+                        use.card = analeptic
+                        if use.to then use.to = sgs.SPlayerList() end
+                        return
+                    end
+                end
 
-			if use.to and canAppendTarget(target) then
-				use.to:append(target)
-			end
-			if not use.to or self.slash_targets <= use.to:length() then	return
-			end
+                if use.to and canAppendTarget(target) then
+                    use.to:append(target)
+                end
+                if not use.to or self.slash_targets <= use.to:length() then	return
+                end
+            end
 		end
 	end
 
@@ -1266,13 +1269,15 @@ function sgs.ai_cardsview.Spear(self, class_name, player, cards)
 		if not cards then
 			cards = {}
 			for _, c in sgs.qlist(player:getHandcards()) do
-				if sgs.cardIsVisible(c, player, self.player) and c:isKindOf("Slash") then continue end
-				table.insert(cards, c)
+				if not sgs.cardIsVisible(c, player, self.player) or not c:isKindOf("Slash") then
+				    table.insert(cards, c)
+                end
 			end
 			for _, id in sgs.qlist(player:getHandPile()) do
 				local c = sgs.Sanguosha:getCard(id)
-				if sgs.cardIsVisible(c, player, self.player) and c:isKindOf("Slash") then continue end
-				table.insert(cards, c)
+				if not sgs.cardIsVisible(c, player, self.player) or not c:isKindOf("Slash") then
+				    table.insert(cards, c)
+                end
 			end
 		end
 		if #cards < 2 then return {} end
@@ -1281,12 +1286,13 @@ function sgs.ai_cardsview.Spear(self, class_name, player, cards)
 
 		local newcards = {}
 		for _, card in ipairs(cards) do
-			if not self.room:getCardOwner(card:getEffectiveId())
-				or self.room:getCardOwner(card:getEffectiveId()):objectName() ~= player:objectName()
-				or self.room:getCardPlace(card:getEffectiveId()) ~= sgs.Player_PlaceHand then continue end
-			if not isCard("Peach", card, player) and not (isCard("ExNihilo", card, player) and player:getPhase() == sgs.Player_Play) then
-				table.insert(newcards, card)
-			end
+			if self.room:getCardOwner(card:getEffectiveId())
+			    and self.room:getCardOwner(card:getEffectiveId()):objectName() == player:objectName()
+			    and self.room:getCardPlace(card:getEffectiveId()) == sgs.Player_PlaceHand then
+                if not isCard("Peach", card, player) and not (isCard("ExNihilo", card, player) and player:getPhase() == sgs.Player_Play) then
+                    table.insert(newcards, card)
+                end
+            end
 		end
 		if #newcards < 2 then return {} end
 
@@ -1805,13 +1811,14 @@ function SmartAI:useCardDuel(duel, use)
 	end
 
 	for _, friend in ipairs(friends) do
-		if not canUseDuelTo(friend) then continue end
-		if friend:hasSkill("jieming") and self.player:hasSkill("rende") and (huatuo and self:isFriend(huatuo)) then
-			table.insert(targets, friend)
-		end
-		if self.player:hasSkill("zhiman") and (self.player:canGetCard(friend, "j") or ((friend:hasShownSkills(sgs.lose_equip_skill) or self:needToThrowArmor(friend)) and self.player:canGetCard(friend, "e"))) then
-			table.insert(targets, friend)
-		end
+		if canUseDuelTo(friend) then
+            if friend:hasSkill("jieming") and self.player:hasSkill("rende") and (huatuo and self:isFriend(huatuo)) then
+                table.insert(targets, friend)
+            end
+            if self.player:hasSkill("zhiman") and (self.player:canGetCard(friend, "j") or ((friend:hasShownSkills(sgs.lose_equip_skill) or self:needToThrowArmor(friend)) and self.player:canGetCard(friend, "e"))) then
+                table.insert(targets, friend)
+            end
+        end
 	end
 
 	for _, enemy in ipairs(enemies) do
@@ -2113,8 +2120,9 @@ function SmartAI:useCardSnatchOrDismantlement(card, use)
 							break
 						end
 					end
-					if not invoke then continue end
-					if addTarget(player, trick:getEffectiveId()) then return end
+					if invoke then
+					    if addTarget(player, trick:getEffectiveId()) then return end
+                    end
 				end
 			end
 		end
@@ -3289,22 +3297,24 @@ function SmartAI:useCardBefriendAttacking(BefriendAttacking, use)
 	local players = sgs.QList2Table(self.room:getOtherPlayers(self.player))
 	self:sort(players)
 	for _, to_select in ipairs(players) do
-		if to_select:hasShownSkill("luanji") and to_select:getHandcardNum() > 3 then continue end
-		if self:isFriend(to_select) and BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
-			and self:hasTrickEffective(BefriendAttacking, to_select, self.player) then
-			targets:append(to_select)
-			if use.to then use.to:append(to_select) end
-		end
+		if not to_select:hasShownSkill("luanji") or to_select:getHandcardNum() <= 3 then
+            if self:isFriend(to_select) and BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
+                and self:hasTrickEffective(BefriendAttacking, to_select, self.player) then
+                targets:append(to_select)
+                if use.to then use.to:append(to_select) end
+            end
+        end
 	end
 
 	if targets:isEmpty() then															--对野心家使用
 		for _, to_select in ipairs(players) do
-			if to_select:hasShownSkill("luanji") and to_select:getHandcardNum() > 3 then continue end
-			if BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
-				and self:hasTrickEffective(BefriendAttacking, to_select, self.player) and to_select:getRole() == "careerist" then
-				targets:append(to_select)
-				if use.to then use.to:append(to_select) end
-			end
+			if not to_select:hasShownSkill("luanji") or to_select:getHandcardNum() <= 3 then
+                if BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
+                    and self:hasTrickEffective(BefriendAttacking, to_select, self.player) and to_select:getRole() == "careerist" then
+                    targets:append(to_select)
+                    if use.to then use.to:append(to_select) end
+                end
+            end
 		end
 	end
 
@@ -3323,22 +3333,24 @@ function SmartAI:useCardBefriendAttacking(BefriendAttacking, use)
 
 	if targets:isEmpty() then															--对该势力使用
 		for _, to_select in ipairs(players) do
-			if to_select:hasShownSkill("luanji") and to_select:getHandcardNum() > 3 then continue end
-			if BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
-				and self:hasTrickEffective(BefriendAttacking, to_select, self.player) and to_select:getKingdom() == targetKingdom then
-				targets:append(to_select)
-				if use.to then use.to:append(to_select) end
-			end
+			if not to_select:hasShownSkill("luanji") or to_select:getHandcardNum() <= 3 then
+                if BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
+                    and self:hasTrickEffective(BefriendAttacking, to_select, self.player) and to_select:getKingdom() == targetKingdom then
+                    targets:append(to_select)
+                    if use.to then use.to:append(to_select) end
+                end
+            end
 		end
 	end
 	if targets:isEmpty() then
 		for _, to_select in ipairs(players) do
-			if to_select:hasShownSkill("luanji") and to_select:getHandcardNum() > 3 then continue end
-			if BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
-				and self:hasTrickEffective(BefriendAttacking, to_select, self.player) then
-				targets:append(to_select)
-				if use.to then use.to:append(to_select) end
-			end
+			if not to_select:hasShownSkill("luanji") or to_select:getHandcardNum() <= 3 then
+                if BefriendAttacking:targetFilter(targets, to_select, self.player) and not targets:contains(to_select)
+                    and self:hasTrickEffective(BefriendAttacking, to_select, self.player) then
+                    targets:append(to_select)
+                    if use.to then use.to:append(to_select) end
+                end
+            end
 		end
 	end
 	if not targets:isEmpty() then

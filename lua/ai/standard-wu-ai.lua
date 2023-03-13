@@ -483,12 +483,13 @@ sgs.ai_skill_use_func.FanjianCard = function(fjCard, use, self)
 		for _, card in ipairs(cards) do
 			if sgs.cardIsVisible(card, enemy, self.player) then visible = visible + 1 end
 		end
-		if visible > 0 and (#cards <= 2 or suits_num <= 2) then continue end
-		if self:canAttack(enemy) and not enemy:hasShownSkills("qingnang|jijiu|tianxiang") then
-			use.card = fjCard
-			if use.to then use.to:append(enemy) end
-			return
-		end
+		if visible <= 0 or #cards > 2 and suits_num > 2 then
+            if self:canAttack(enemy) and not enemy:hasShownSkills("qingnang|jijiu|tianxiang") then
+                use.card = fjCard
+                if use.to then use.to:append(enemy) end
+                return
+            end
+        end
 	end
 end
 
@@ -1230,11 +1231,12 @@ sgs.ai_skill_use["@@tianxiang"] = function(self, data, method)
 
 	for _, enemy in ipairs(self.enemies) do
 		if (enemy:getHp() <= dmg.damage  and enemy:getLostHp() + dmg.damage < 3 and enemy:isAlive()) and not (enemy:hasShownSkill("kuanggu") and dmg.from and dmg.from:objectName() == enemy:objectName()) then
-			if enemy:hasShownSkill("jijiu") and (enemy:getHandcardNum() > 2 or getKnownCard(enemy, self.player, "red", true) > 0) then continue end
-			if (enemy:getHandcardNum() <= 2 or enemy:hasShownSkills("guose|leiji|ganglie|qingguo|kongcheng") or enemy:containsTrick("indulgence"))
-				and self:canAttack(enemy, dmg.from or self.room:getCurrent(), dmg.nature) then
-				return "@TianxiangCard=" .. card_id .. "&tianxiang->" .. enemy:objectName()
-			end
+			if not enemy:hasShownSkill("jijiu") or enemy:getHandcardNum() <= 2 and getKnownCard(enemy, self.player, "red", true) <= 0 then
+                if (enemy:getHandcardNum() <= 2 or enemy:hasShownSkills("guose|leiji|ganglie|qingguo|kongcheng") or enemy:containsTrick("indulgence"))
+                    and self:canAttack(enemy, dmg.from or self.room:getCurrent(), dmg.nature) then
+                    return "@TianxiangCard=" .. card_id .. "&tianxiang->" .. enemy:objectName()
+                end
+            end
 		end
 	end
 

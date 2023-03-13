@@ -252,23 +252,24 @@ function sgs.printFEList(player)
 	if not player then global_room:writeToConsole("---==== printFEList ====---") end
 	global_room:writeToConsole("gameProcess :: " .. sgs.gameProcess())
 	for _, p in sgs.qlist(global_room:getAlivePlayers()) do
-		if player and p:objectName() ~= player:objectName() then continue end
-		local name = p:getActualGeneral1Name() .. "/" .. p:getActualGeneral2Name()
-		global_room:writeToConsole("----  " .. name .. "  kingdom::" .. p:getKingdom() .. "-" .. sgs.ais[global_room:getCurrent():objectName()]:evaluateKingdom(p) .. "  ----")
-		local sgsself = sgs.ais[p:objectName()]
-		sgsself:updatePlayers()
-		local msge = "enemies:"
-		for _, enemy in ipairs(sgsself.enemies) do
-			local name1 = enemy:getActualGeneral1Name() .. "/" .. enemy:getActualGeneral2Name()
-			msge = msge .. name1 .. ", "
-		end
-		global_room:writeToConsole(msge)
-		local msgf = "friends:"
-		for _, friend in ipairs(sgsself.friends) do
-			local name2 = friend:getActualGeneral1Name() .. "/" .. friend:getActualGeneral2Name()
-			msgf = msgf .. name2 .. ", "
-		end
-		global_room:writeToConsole(msgf)
+		if not player or p:objectName() == player:objectName() then
+            local name = p:getActualGeneral1Name() .. "/" .. p:getActualGeneral2Name()
+            global_room:writeToConsole("----  " .. name .. "  kingdom::" .. p:getKingdom() .. "-" .. sgs.ais[global_room:getCurrent():objectName()]:evaluateKingdom(p) .. "  ----")
+            local sgsself = sgs.ais[p:objectName()]
+            sgsself:updatePlayers()
+            local msge = "enemies:"
+            for _, enemy in ipairs(sgsself.enemies) do
+                local name1 = enemy:getActualGeneral1Name() .. "/" .. enemy:getActualGeneral2Name()
+                msge = msge .. name1 .. ", "
+            end
+            global_room:writeToConsole(msge)
+            local msgf = "friends:"
+            for _, friend in ipairs(sgsself.friends) do
+                local name2 = friend:getActualGeneral1Name() .. "/" .. friend:getActualGeneral2Name()
+                msgf = msgf .. name2 .. ", "
+            end
+            global_room:writeToConsole(msgf)
+        end
 	end
 end
 

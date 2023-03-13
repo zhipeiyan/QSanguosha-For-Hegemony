@@ -48,11 +48,9 @@ sgs.ai_skill_use_func.TransferCard = function(transferCard, use, self)
 		if c:isTransferable() and (not isCard("Peach", c, self.player) or #friends > 0) then
 			if not oneJink and isCard("Jink", c, self.player) then
 				oneJink = true
-				continue
-			elseif c:getNumber() > 10 and self.player:hasSkills("tianyi|quhu|shuangren|lieren") then 
-				continue
+			elseif not c:getNumber() <= 10 or not self.player:hasSkills("tianyi|quhu|shuangren|lieren") then
+				table.insert(cards, c)
 			end
-			table.insert(cards, c)
 		end
 	end
 	if #cards == 0 then return end
@@ -263,24 +261,23 @@ function SmartAI:useCardBurningCamps(card, use)
 	local shouldUse
 	for i = 0 , players:length() - 1 do
 		player = findPlayerByObjectName(players:at(i):objectName())
-		if not self:hasTrickEffective(card, player, self.player) then
-			continue
-		end
-		local damage = {}
-		damage.from = self.player
-		damage.to = player
-		damage.nature = sgs.DamageStruct_Fire
-		damage.damage = 1
-		if self:damageIsEffective_(damage) then
-			if player:isChained() and self:isGoodChainTarget_(damage) then
-				shouldUse = true
-			elseif self:objectiveLevel(player) > 3.5 then
-				--self.player:speak("objectivelevel大于3.5")
-				shouldUse = true
-			else
-				return
-			end
-		end
+		if self:hasTrickEffective(card, player, self.player) then
+            local damage = {}
+            damage.from = self.player
+            damage.to = player
+            damage.nature = sgs.DamageStruct_Fire
+            damage.damage = 1
+            if self:damageIsEffective_(damage) then
+                if player:isChained() and self:isGoodChainTarget_(damage) then
+                    shouldUse = true
+                elseif self:objectiveLevel(player) > 3.5 then
+                    --self.player:speak("objectivelevel大于3.5")
+                    shouldUse = true
+                else
+                    return
+                end
+            end
+        end
 	end
 	if shouldUse then
 		local chaincard = self:getCard("FightTogether")
@@ -621,21 +618,22 @@ function SmartAI:useCardFightTogether(card, use)
 				if not p:hasShownOneGeneral() and not(p:hasArmorEffect("IronArmor") and not p:isChained()) then
 					if p:objectName() == self.player:objectName() then isSmall = true end
 					table.insert(smalls, p)
-					continue
-				elseif p:getRole() == "careerist" then
-					kingdom = "careerist"
 				else
-					kingdom = p:getKingdom()
-				end
-				if table.contains(big_kingdoms, kingdom) then
-					if p:objectName() == self.player:objectName() then isBig = true end
-					table.insert(bigs, p)
-				else
-					if not(p:hasArmorEffect("IronArmor") and not p:isChained()) then
-						if p:objectName() == self.player:objectName() then isSmall = true end
-						table.insert(smalls, p)
-					end
-				end
+                    if p:getRole() == "careerist" then
+                        kingdom = "careerist"
+                    else
+                        kingdom = p:getKingdom()
+                    end
+                    if table.contains(big_kingdoms, kingdom) then
+                        if p:objectName() == self.player:objectName() then isBig = true end
+                        table.insert(bigs, p)
+                    else
+                        if not(p:hasArmorEffect("IronArmor") and not p:isChained()) then
+                            if p:objectName() == self.player:objectName() then isSmall = true end
+                            table.insert(smalls, p)
+                        end
+                    end
+                end
 			end
 		end
 	end
@@ -1137,8 +1135,6 @@ sgs.ai_skill_cardask["@Halberd"] = function(self)
 			if p then
 				use.to:append(p)
 				table.insert(targets, p:objectName())
-			else
-				continue
 			end
 		end
 		self:useCardSlash(card, use)
@@ -1155,14 +1151,15 @@ sgs.ai_skill_cardask["@Halberd"] = function(self)
 		local cards = self:getCards("Slash")
 		self:sortByUseValue(cards)
 		for _, slash in ipairs(cards) do
-			if slash:isKindOf("HalberdCard") or slash:getEffectiveId() == self.player:getWeapon():getEffectiveId() then continue end
-			self:useCardSlash(slash, use)
-			if not use.card or not use.card:isKindOf("Slash") then return "." end
-			
-			for _, p in sgs.qlist(use.to) do
-				table.insert(targets, p:objectName())
-			end
-			if #targets > 0 and (not target or table.contains(targets, target:objectName())) then return slash:toString() .. "->" .. table.concat(targets, "+") end
+			if not slash:isKindOf("HalberdCard") and slash:getEffectiveId() ~= self.player:getWeapon():getEffectiveId() then
+                self:useCardSlash(slash, use)
+                if not use.card or not use.card:isKindOf("Slash") then return "." end
+
+                for _, p in sgs.qlist(use.to) do
+                    table.insert(targets, p:objectName())
+                end
+                if #targets > 0 and (not target or table.contains(targets, target:objectName())) then return slash:toString() .. "->" .. table.concat(targets, "+") end
+            end
 		end
 	end
 	return "."

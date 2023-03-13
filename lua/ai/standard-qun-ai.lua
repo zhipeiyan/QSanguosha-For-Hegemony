@@ -507,58 +507,64 @@ sgs.ai_skill_cardask["@luanwu-slash"] = function(self)
 	if #slashes == 0 then return "." end
 	self:sort(players, "defenseSlash")
 	for _, slash in ipairs(slashes) do
-		if slash:isKindOf("HalberdCard") then continue end
-		local targets = {}
-		local EXT = 1 + sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_ExtraTarget, self.player, slash)
-		for _, friend in ipairs(players) do
-			if not self.player:canSlash(friend, slash) then continue end
-			if self:isFriend(friend) and not self:hasHeavySlashDamage(self.player, slash, friend)
-				and not self:slashProhibit(slash, friend) and self:slashIsEffective(slash, friend)
-				and self:isPriorFriendOfSlash(friend, slash, self.player)
-				and not table.contains(targets, friend:objectName()) then
-				table.insert(targets, friend:objectName())
-			end
-		end
+		if not slash:isKindOf("HalberdCard") then
+            local targets = {}
+            local EXT = 1 + sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_ExtraTarget, self.player, slash)
+            for _, friend in ipairs(players) do
+                if self.player:canSlash(friend, slash) then
+                    if self:isFriend(friend) and not self:hasHeavySlashDamage(self.player, slash, friend)
+                        and not self:slashProhibit(slash, friend) and self:slashIsEffective(slash, friend)
+                        and self:isPriorFriendOfSlash(friend, slash, self.player)
+                        and not table.contains(targets, friend:objectName()) then
+                        table.insert(targets, friend:objectName())
+                    end
+                end
+            end
 
-		for _, enemy in ipairs(players) do
-			if not self.player:canSlash(enemy, slash) then continue end
-			if self:isEnemy(enemy) and not self:slashProhibit(slash, enemy) and self:slashIsEffective(slash, enemy)
-				and sgs.isGoodTarget(enemy, players, self) and not table.contains(targets, enemy:objectName()) then
-				table.insert(targets, enemy:objectName())
-			end
-		end
+            for _, enemy in ipairs(players) do
+                if self.player:canSlash(enemy, slash) then
+                    if self:isEnemy(enemy) and not self:slashProhibit(slash, enemy) and self:slashIsEffective(slash, enemy)
+                        and sgs.isGoodTarget(enemy, players, self) and not table.contains(targets, enemy:objectName()) then
+                        table.insert(targets, enemy:objectName())
+                    end
+                end
+            end
 
-		for _, friend in ipairs(players) do
-			if not self.player:canSlash(friend, slash) then continue end
-			if self:isFriend(friend) and not self:hasHeavySlashDamage(self.player, slash, friend)
-				and not self:slashProhibit(slash, friend) and self:slashIsEffective(slash, friend)
-				and (self:getDamagedEffects(friend, self.player, true) or self:needToLoseHp(friend, self.player, true))
-				and not table.contains(targets, friend:objectName()) then
-				table.insert(targets, friend:objectName())
-			end
-		end
+            for _, friend in ipairs(players) do
+                if self.player:canSlash(friend, slash) then
+                    if self:isFriend(friend) and not self:hasHeavySlashDamage(self.player, slash, friend)
+                        and not self:slashProhibit(slash, friend) and self:slashIsEffective(slash, friend)
+                        and (self:getDamagedEffects(friend, self.player, true) or self:needToLoseHp(friend, self.player, true))
+                        and not table.contains(targets, friend:objectName()) then
+                        table.insert(targets, friend:objectName())
+                    end
+                end
+            end
 
-		if self:isWeak() then
-			for _, enemy in ipairs(players) do
-				if not self.player:canSlash(enemy, slash) then continue end
-				if not table.contains(targets, enemy:objectName()) and self:isEnemy(enemy) then
-					table.insert(targets, enemy:objectName())
-				end
-			end
-		end
+            if self:isWeak() then
+                for _, enemy in ipairs(players) do
+                    if self.player:canSlash(enemy, slash) then
+                        if not table.contains(targets, enemy:objectName()) and self:isEnemy(enemy) then
+                            table.insert(targets, enemy:objectName())
+                        end
+                    end
+                end
+            end
 
-		if self:isWeak() then
-			for _, friend in ipairs(players) do
-				if not self.player:canSlash(friend, slash) then continue end
-				if not table.contains(targets, friend:objectName()) and self:isFriend(friend) and (not self:isFriend(friend) or getKnownCard(friend, self.player, "Jink", true) > 0) then
-					table.insert(targets, friend:objectName())
-				end
-			end
-		end
+            if self:isWeak() then
+                for _, friend in ipairs(players) do
+                    if self.player:canSlash(friend, slash) then
+                        if not table.contains(targets, friend:objectName()) and self:isFriend(friend) and (not self:isFriend(friend) or getKnownCard(friend, self.player, "Jink", true) > 0) then
+                            table.insert(targets, friend:objectName())
+                        end
+                    end
+                end
+            end
 
-		if #targets > 0 then
-			return slash:toString() .. "->" .. table.concat(targets, "+", 1, EXT)
-		end
+            if #targets > 0 then
+                return slash:toString() .. "->" .. table.concat(targets, "+", 1, EXT)
+            end
+        end
 	end
 	return "."
 end
@@ -664,7 +670,7 @@ function sgs.ai_cardneed.guidao(to, card, self)
 		if player:containsTrick("lightning") and self:getFinalRetrial(to, "lightning") == 1  then
 			return card:getSuit() == sgs.Card_Spade and card:getNumber() >= 2 and card:getNumber() <= 9 and not self.player:hasSkill("hongyan")
 		end
-		if self:isFriend(player) and self:willSkipDrawPhase(player) and self:getFinalRetrial(to, "supply_shortage") == 1then
+		if self:isFriend(player) and self:willSkipDrawPhase(player) and self:getFinalRetrial(to, "supply_shortage") == 1 then
 			return card:getSuit() == sgs.Card_Club and self:hasSuit("club", true, to)
 		end
 	end
@@ -1088,19 +1094,21 @@ sgs.ai_skill_use_func.QingchengCard = function(card, use, self)
 	self:useBasicCard(slash, dummy_use)
 	if (dummy_use.card and dummy_use.to:length() > 0) then
 		for _, p in sgs.qlist(dummy_use.to) do
-			if not p:hasShownAllGenerals() then continue end
-			if self.player:isFriendWith(p) or (self.player:getActualGeneral1():getKingdom() == p:getKingdom()) then continue end
-			local skill_table = (sgs.masochism_skill .. "|" .. sgs.defense_skill .. "|" .. sgs.save_skill):split("|")
-			for _, skill_name in ipairs(skill_table) do
-				if (p:hasShownSkill(skill_name)) then
-					use.card = card
-					if ((not use.isDummy) and use.to) then
-						sgs.qingcheng = (p:inHeadSkills(skill_name) and p:getGeneral():objectName() or p:getGeneral2():objectName())
-						use.to:append(p)
-					end
-					return
-				end
-			end
+			if p:hasShownAllGenerals() then
+                if not self.player:isFriendWith(p) and self.player:getActualGeneral1():getKingdom() ~= p:getKingdom() then
+                    local skill_table = (sgs.masochism_skill .. "|" .. sgs.defense_skill .. "|" .. sgs.save_skill):split("|")
+                    for _, skill_name in ipairs(skill_table) do
+                        if (p:hasShownSkill(skill_name)) then
+                            use.card = card
+                            if ((not use.isDummy) and use.to) then
+                                sgs.qingcheng = (p:inHeadSkills(skill_name) and p:getGeneral():objectName() or p:getGeneral2():objectName())
+                                use.to:append(p)
+                            end
+                            return
+                        end
+                    end
+                end
+            end
 		end
 	end
 	return

@@ -547,17 +547,19 @@ function sgs.gameProcess(update)
 	local get_possible_kingdom = function(player)
 		local max_value, max_kingdom = 0, {}
 		for kingdom, v in pairs(sgs.ai_loyalty) do
-			if not table.contains(sgs.KingdomsTable, kingdom) then continue end
-			if sgs.ai_loyalty[kingdom][player:objectName()] > max_value then
-				max_value = sgs.ai_loyalty[kingdom][player:objectName()]
-			end
+			if table.contains(sgs.KingdomsTable, kingdom) then
+                if sgs.ai_loyalty[kingdom][player:objectName()] > max_value then
+                    max_value = sgs.ai_loyalty[kingdom][player:objectName()]
+                end
+            end
 		end
 		if max_value > 0 then
 			for kingdom, v in pairs(sgs.ai_loyalty) do
-				if not table.contains(sgs.KingdomsTable, kingdom) then continue end
-				if sgs.ai_loyalty[kingdom][player:objectName()] == max_value then
-					table.insert(max_kingdom, kingdom)
-				end
+				if table.contains(sgs.KingdomsTable, kingdom) then
+                    if sgs.ai_loyalty[kingdom][player:objectName()] == max_value then
+                        table.insert(max_kingdom, kingdom)
+                    end
+                end
 			end
 		end
 		return #max_kingdom > 0 and table.concat(max_kingdom, "?") or "unknown"
@@ -791,18 +793,21 @@ function SmartAI:evaluateKingdom(player, other)
 	local max_value, max_kingdom = 0, {}
 	local KnownBothEnemy = player:getMark("KnownBothEnemy" .. other:objectName()) > 0
 	for kingdom, v in pairs(sgs.ai_loyalty) do
-		if not table.contains(sgs.KingdomsTable, kingdom) then continue end
-		if KnownBothEnemy and kingdom == other:getKingdom() then continue end
-		if sgs.ai_loyalty[kingdom][player:objectName()] > max_value then
-			max_value = sgs.ai_loyalty[kingdom][player:objectName()]
-		end
+		if table.contains(sgs.KingdomsTable, kingdom) then
+            if not (KnownBothEnemy and kingdom == other:getKingdom()) then
+                if sgs.ai_loyalty[kingdom][player:objectName()] > max_value then
+                    max_value = sgs.ai_loyalty[kingdom][player:objectName()]
+                end
+            end
+        end
 	end
 	if max_value > 0 then
 		for kingdom, v in pairs(sgs.ai_loyalty) do
-			if not table.contains(sgs.KingdomsTable, kingdom) then continue end
-			if sgs.ai_loyalty[kingdom][player:objectName()] == max_value then
-				table.insert(max_kingdom, kingdom)
-			end
+			if table.contains(sgs.KingdomsTable, kingdom) then
+                if sgs.ai_loyalty[kingdom][player:objectName()] == max_value then
+                    table.insert(max_kingdom, kingdom)
+                end
+            end
 		end
 	end
 
@@ -999,11 +1004,12 @@ function SmartAI:updatePlayerKingdom(player, data)
 	if all_shown then
 		sgs.KingdomsTable = {}
 		for _, p in sgs.qlist(self.room:getAlivePlayers()) do
-			if p:getRole() == "careerist" then continue end
-			local kingdom = p:getKingdom()
-			if not table.contains(sgs.KingdomsTable, kingdom) then
-				table.insert(sgs.KingdomsTable, kingdom)
-			end
+			if p:getRole() ~= "careerist" then
+                local kingdom = p:getKingdom()
+                if not table.contains(sgs.KingdomsTable, kingdom) then
+                    table.insert(sgs.KingdomsTable, kingdom)
+                end
+            end
 		end
 	end
 
@@ -1015,8 +1021,9 @@ function SmartAI:updatePlayerKingdom(player, data)
 		if sgs.ai_explicit[p:objectName()] ~= "unknown" then
 			sgs.ai_explicit[p:objectName()] = p:getRole() == "careerist" and "careerist" or p:getKingdom()
 		end
-		if sgs.ai_explicit[p:objectName()] == "careerist" or sgs.ai_explicit[p:objectName()] == "unknown" then continue end
-		sgs.shown_kingdom[sgs.ai_explicit[p:objectName()]] = sgs.shown_kingdom[sgs.ai_explicit[p:objectName()]] + 1
+		if sgs.ai_explicit[p:objectName()] ~= "careerist" and sgs.ai_explicit[p:objectName()] ~= "unknown" then
+		    sgs.shown_kingdom[sgs.ai_explicit[p:objectName()]] = sgs.shown_kingdom[sgs.ai_explicit[p:objectName()]] + 1
+        end
 	end
 
 	if data then
@@ -1916,10 +1923,11 @@ function sgs.updateAlivePlayerRoles()
 	sgs.robot = {}
 	for _, aplayer in sgs.qlist(global_room:getAllPlayers()) do
 		if aplayer:getState() == "robot" then table.insert(sgs.robot, aplayer) end
-		if aplayer:getRole() == "careerist" then continue end
-		local kingdom = aplayer:getKingdom()
-		if not sgs.current_mode_players[kingdom] then sgs.current_mode_players[kingdom] = 0 end
-		sgs.current_mode_players[kingdom] = sgs.current_mode_players[kingdom] + 1
+		if aplayer:getRole() ~= "careerist" then
+            local kingdom = aplayer:getKingdom()
+            if not sgs.current_mode_players[kingdom] then sgs.current_mode_players[kingdom] = 0 end
+            sgs.current_mode_players[kingdom] = sgs.current_mode_players[kingdom] + 1
+        end
 	end
 end
 
@@ -2019,10 +2027,11 @@ sgs.ai_choicemade_filter.guanxingViewCards.general = function(self, from, prompt
 		sgs.ai_guangxing[player][count] = {}
 	end
 	for _, id in ipairs(ids) do
-		if string.len(id) == 0 then continue end
-		if not table.contains(sgs.ai_guangxing[player][count], id) then
-			table.insert(sgs.ai_guangxing[player][count], id)
-		end
+		if string.len(id) ~= 0 then
+            if not table.contains(sgs.ai_guangxing[player][count], id) then
+                table.insert(sgs.ai_guangxing[player][count], id)
+            end
+        end
 	end
 end
 
@@ -2810,14 +2819,15 @@ function SmartAI:askForCardChosen(who, flags, reason, method, disable_list)
 			local tricks = who:getCards("j")
 			local lightning, indulgence, supply_shortage
 			for _, trick in sgs.qlist(tricks) do
-				if table.contains(disable_list, trick:getEffectiveId()) then continue end
-				if trick:isKindOf("Lightning") then
-					lightning = trick:getId()
-				elseif trick:isKindOf("Indulgence") then
-					indulgence = trick:getId()
-				elseif not trick:isKindOf("Disaster") then
-					supply_shortage = trick:getId()
-				end
+				if not table.contains(disable_list, trick:getEffectiveId()) then
+                    if trick:isKindOf("Lightning") then
+                        lightning = trick:getId()
+                    elseif trick:isKindOf("Indulgence") then
+                        indulgence = trick:getId()
+                    elseif not trick:isKindOf("Disaster") then
+                        supply_shortage = trick:getId()
+                    end
+                end
 			end
 
 			if self:hasWizard(self.enemies) and lightning then
@@ -2921,9 +2931,7 @@ function SmartAI:askForCardChosen(who, flags, reason, method, disable_list)
 			local tricks = who:getCards("j")
 			local lightning
 			for _, trick in sgs.qlist(tricks) do
-				if table.contains(disable_list, trick:getEffectiveId()) then
-					continue
-				else
+				if not table.contains(disable_list, trick:getEffectiveId()) then
 					if trick:isKindOf("Lightning") then
 						lightning = trick:getId()
 					end
@@ -4972,26 +4980,27 @@ function SmartAI:getAoeValue(card)
 	end
 
 	for _, p in sgs.qlist(self.room:getAllPlayers()) do
-		if p:objectName() == self.player:objectName() then continue end
-		if self:isFriend(p) then
-			good = good + getAoeValueTo(p, attacker)
-			if zhiman then
-				if attacker:canGetCard(p, "j") then
-					good = good + 10
-				elseif attacker:canGetCard(p, "e") and p:hasShownSkills(sgs.lose_equip_skill) then
-					good = good + 10
-				end
-			end
-		else
-			bad = bad + getAoeValueTo(p, attacker)
-			if zhimanprevent and self:isFriend(p, attacker) then
-				if attacker:canGetCard(p, "j") then
-					bad = bad + 10
-				elseif attacker:canGetCard(p, "e") and p:hasShownSkills(sgs.lose_equip_skill) then
-					bad = bad + 10
-				end
-			end
-		end
+		if p:objectName() ~= self.player:objectName() then
+            if self:isFriend(p) then
+                good = good + getAoeValueTo(p, attacker)
+                if zhiman then
+                    if attacker:canGetCard(p, "j") then
+                        good = good + 10
+                    elseif attacker:canGetCard(p, "e") and p:hasShownSkills(sgs.lose_equip_skill) then
+                        good = good + 10
+                    end
+                end
+            else
+                bad = bad + getAoeValueTo(p, attacker)
+                if zhimanprevent and self:isFriend(p, attacker) then
+                    if attacker:canGetCard(p, "j") then
+                        bad = bad + 10
+                    elseif attacker:canGetCard(p, "e") and p:hasShownSkills(sgs.lose_equip_skill) then
+                        bad = bad + 10
+                    end
+                end
+            end
+        end
 		if self:aoeIsEffective(card, p, self.player) and self:cantbeHurt(p, attacker) then bad = bad + 250 end
 		if kills == enemies then return 998 end
 	end
@@ -5514,27 +5523,33 @@ function SmartAI:findPlayerToDiscard(flags, include_self, method, players, retur
 	flags = flags or "he"
 	if not players then
 		for _, p in ipairs(self.friends_noself) do
-			if isDiscard and not self.player:canDiscard(p, flags) then continue end
-			if isGet and not self.player:canGetCard(p, flags) then continue end
-			if self:isFriend(p) then
-				table.insert(friends, p)
-			end
+			if not isDiscard or self.player:canDiscard(p, flags) then
+                if not isGet or self.player:canGetCard(p, flags) then
+                    if self:isFriend(p) then
+                        table.insert(friends, p)
+                    end
+                end
+            end
 		end
 		if include_self then table.insert(friends, self.player) end
 		for _, p in ipairs(self.enemies) do
-			if isDiscard and not self.player:canDiscard(p, flags) then continue end
-			if isGet and not self.player:canGetCard(p, flags) then continue end
-			table.insert(enemies, p)
+			if not isDiscard or self.player:canDiscard(p, flags) then
+                if not isGet or self.player:canGetCard(p, flags) then
+                    table.insert(enemies, p)
+                end
+            end
 		end
 	else
 		for _, player in sgs.qlist(players) do
-			if isDiscard and not self.player:canDiscard(player, flags) then continue end
-			if isGet and not self.player:canGetCard(player, flags) then continue end
-			if self:isFriend(player) and (include_self or player:objectName() ~= self.player:objectName()) then
-				table.insert(friends, player)
-			elseif self:isEnemy(player) then
-				table.insert(enemies, player)
-			end
+			if not isDiscard or self.player:canDiscard(player, flags) then
+                if not isGet or self.player:canGetCard(player, flags) then
+                    if self:isFriend(player) and (include_self or player:objectName() ~= self.player:objectName()) then
+                        table.insert(friends, player)
+                    elseif self:isEnemy(player) then
+                        table.insert(enemies, player)
+                    end
+                end
+            end
 		end
 	end
 
@@ -5663,27 +5678,33 @@ function SmartAI:findCardsToDiscard(flags, include_self, method, players, onebyo
 	flags = flags or "he"
 	if not players then
 		for _, p in ipairs(self.friends_noself) do
-			if isDiscard and not self.player:canDiscard(p, flags) then continue end
-			if isGet and not self.player:canGetCard(p, flags) then continue end
-			if self:isFriend(p) then
-				table.insert(friends, p)
-			end
+			if not isDiscard or self.player:canDiscard(p, flags) then
+                if not isGet or self.player:canGetCard(p, flags) then
+                    if self:isFriend(p) then
+                        table.insert(friends, p)
+                    end
+                end
+            end
 		end
 		if include_self then table.insert(friends, self.player) end
 		for _, p in ipairs(self.enemies) do
-			if isDiscard and not self.player:canDiscard(p, flags) then continue end
-			if isGet and not self.player:canGetCard(p, flags) then continue end
-			table.insert(enemies, p)
+			if not isDiscard or self.player:canDiscard(p, flags) then
+                if not isGet or self.player:canGetCard(p, flags) then
+                    table.insert(enemies, p)
+                end
+            end
 		end
 	else
 		for _, player in sgs.qlist(players) do
-			if isDiscard and not self.player:canDiscard(player, flags) then continue end
-			if isGet and not self.player:canGetCard(player, flags) then continue end
-			if self:isFriend(player) and (include_self or player:objectName() ~= self.player:objectName()) then
-				table.insert(friends, player)
-			elseif self:isEnemy(player) then
-				table.insert(enemies, player)
-			end
+			if not isDiscard or self.player:canDiscard(player, flags) then
+                if not isGet or self.player:canGetCard(player, flags) then
+                    if self:isFriend(player) and (include_self or player:objectName() ~= self.player:objectName()) then
+                        table.insert(friends, player)
+                    elseif self:isEnemy(player) then
+                        table.insert(enemies, player)
+                    end
+                end
+            end
 		end
 	end
 
@@ -6064,8 +6085,9 @@ end
 function SmartAI:resetCards(cards, except)
 	local result = {}
 	for _, c in ipairs(cards) do
-		if c:getEffectiveId() == except:getEffectiveId() then continue
-		else table.insert(result, c) end
+		if c:getEffectiveId() ~= except:getEffectiveId() then
+		    table.insert(result, c)
+        end
 	end
 	return result
 end

@@ -346,64 +346,65 @@ end
 sgs.ai_skill_invoke.hengzheng = function(self, data)
 	local value = 0
 	for _, p in sgs.qlist(self.room:getOtherPlayers(self.player)) do
-		if p:isNude() and p:getJudgingArea():isEmpty() then continue end
-		if self:isFriend(p) then
-			local good = false
-			if not p:getJudgingArea():isEmpty() then
-				value = value + 1.5
-				good = true
-			end
-			if self:needToThrowArmor(p) then
-				value = value + 1.2
-				good = true
-			end
-			if p:getEquips():length() > 0 and p:hasShownSkills(sgs.lose_equip_skill) then
-				value = value + 1
-				good = true
-			end
-			if p:hasShownSkill("tuntian") then
-				value = value + 0.5
-				good = true
-			end
-			if self:needKongcheng(p, false, true) and p:getHandcardNum() == 1 then
-				value = value + 0.8
-				good = true
-			end
-			if not good then
-				value = value - 1
-			end
-		elseif self:isEnemy(p) then
-			if p:isNude() then
-				value = value - 1.5
-			else
-				if self:getDangerousCard(p) or self:getValuableCard(p) then
-					value = value + 0.8
-					if p:hasShownSkills(sgs.lose_equip_skill) then
-						value = value - 1
-					end
-				elseif p:getEquips():isEmpty() then
-					if self:needKongcheng(p, false, true) and p:getHandcardNum() == 1 then
-						value = value - 0.8
-					end
-					if getKnownCard(p, self.player, "Peach", true, "h") > 0 or getKnownCard(p, self.player, "Analeptic", true, "h") > 0 then
-						value = value + 2 / p:getHandcardNum()
-					end
-				elseif p:getHandcardNum() == 0 then
-					if p:getEquips() == 1 and self:needToThrowArmor(p) then
-						value = value - 1
-					end
-					if p:hasShownSkills(sgs.lose_equip_skill) then
-						value = value - 1
-					end
-				end
-				if p:hasShownSkill("tuntian") then
-					value = value - 0.5
-				end
-				value = value + 1
-			end
-		else
-			value = value + 1
-		end
+		if not p:isNude() or not p:getJudgingArea():isEmpty() then
+            if self:isFriend(p) then
+                local good = false
+                if not p:getJudgingArea():isEmpty() then
+                    value = value + 1.5
+                    good = true
+                end
+                if self:needToThrowArmor(p) then
+                    value = value + 1.2
+                    good = true
+                end
+                if p:getEquips():length() > 0 and p:hasShownSkills(sgs.lose_equip_skill) then
+                    value = value + 1
+                    good = true
+                end
+                if p:hasShownSkill("tuntian") then
+                    value = value + 0.5
+                    good = true
+                end
+                if self:needKongcheng(p, false, true) and p:getHandcardNum() == 1 then
+                    value = value + 0.8
+                    good = true
+                end
+                if not good then
+                    value = value - 1
+                end
+            elseif self:isEnemy(p) then
+                if p:isNude() then
+                    value = value - 1.5
+                else
+                    if self:getDangerousCard(p) or self:getValuableCard(p) then
+                        value = value + 0.8
+                        if p:hasShownSkills(sgs.lose_equip_skill) then
+                            value = value - 1
+                        end
+                    elseif p:getEquips():isEmpty() then
+                        if self:needKongcheng(p, false, true) and p:getHandcardNum() == 1 then
+                            value = value - 0.8
+                        end
+                        if getKnownCard(p, self.player, "Peach", true, "h") > 0 or getKnownCard(p, self.player, "Analeptic", true, "h") > 0 then
+                            value = value + 2 / p:getHandcardNum()
+                        end
+                    elseif p:getHandcardNum() == 0 then
+                        if p:getEquips() == 1 and self:needToThrowArmor(p) then
+                            value = value - 1
+                        end
+                        if p:hasShownSkills(sgs.lose_equip_skill) then
+                            value = value - 1
+                        end
+                    end
+                    if p:hasShownSkill("tuntian") then
+                        value = value - 0.5
+                    end
+                    value = value + 1
+                end
+            else
+                value = value + 1
+            end
+        end
 	end
 	if value > 2 then
 		return true

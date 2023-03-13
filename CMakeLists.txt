@@ -331,6 +331,7 @@ set(INCLUDEPATH
 
 set(OTHER_FILES
         style-sheet/sanguosha.qss
+        style-sheet/windows-extra.qss
         ui-script/animation.qml
         sanguosha.ts)
 

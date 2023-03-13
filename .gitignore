@@ -39,4 +39,7 @@ src/bot_version.cpp
 .idea
 cmake-build*
 Qt5*.dll
+/fmod*.dll
+/vld*.dll
+/freetype.dll
 /build

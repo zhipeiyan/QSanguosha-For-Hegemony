@@ -18,7 +18,7 @@
     Mogara
     *********************************************************************/
 
-#if defined(WIN32) && !defined(GPP) && !defined(QT_NO_DEBUG) && !defined(WINRT)
+#if defined(USE_VLD)
 #include <vld.h>
 #endif
 

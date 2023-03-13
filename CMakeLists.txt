@@ -46,6 +46,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
 endif()
 find_package(Freetype REQUIRED)
 
+add_compile_definitions(AUDIO_SUPPORT)
 set(FMOD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/3rd-party/fmod-2.02/include)
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
     set(FM_DBG_SUFFIX L)
@@ -64,8 +65,9 @@ endif()
 set(FMOD_LIBRARY ${CMAKE_SOURCE_DIR}/3rd-party/fmod-2.02/lib/${FMOD_LIB_SUFFIX})
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows" AND NOT MINGW)
-    set(VLD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/3rd-party/vld/include)
-    set(VLD_LIBRARY ${CMAKE_SOURCE_DIR}/3rd-party/vld/lib/win/${ARCH}/vld.lib)
+    add_compile_definitions(USE_VLD)
+    set(VLD_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/3rd-party/vld-2.5.1-win/include)
+    set(VLD_LIBRARY ${CMAKE_SOURCE_DIR}/3rd-party/vld-2.5.1-win/lib/${ARCH}/vld.lib)
 endif()
 
 set(CMAKE_AUTOMOC ON)
@@ -331,21 +333,6 @@ set(OTHER_FILES
         style-sheet/sanguosha.qss
         ui-script/animation.qml
         sanguosha.ts)
-
-add_compile_definitions(AUDIO_SUPPORT)
-if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    if (MINGW)
-        add_compile_definitions(GPP WIN32)
-    elseif(CMAKE_VS_PLATFORM_NAME MATCHES "Win32")
-        add_compile_definitions(WIN32)
-    else()
-        add_compile_definitions(WIN64)
-    endif()
-elseif (CMAKE_SYSTEM_NAME MATCHES "Linux")
-    add_compile_definitions(LINUX)
-elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    add_compile_definitions(MAC)
-endif ()
 
 add_executable(QSanguosha ${SOURCES} ${HEADERS} ${FORMS} ${OTHER_FILES})
 target_include_directories(QSanguosha PRIVATE ${INCLUDEPATH} ${LUA_INCLUDE_DIR} ${FREETYPE_INCLUDE_DIR_ft2build} ${FMOD_INCLUDE_DIR} ${VLD_INCLUDE_DIR})

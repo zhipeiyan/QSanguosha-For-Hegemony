@@ -1,9 +1,9 @@
 Open Source Sanguosha
 ==========
 
-| Homepage:      | http://qsanguosha.org                        |
-|----------------|-----------------------------------------------|
-| API reference: | http://gaodayihao.github.com/QSanguosha/api   |
+| Homepage:      | http://qsanguosha.org (dead)                            |
+|----------------|---------------------------------------------------------|
+| API reference: | http://gaodayihao.github.com/QSanguosha/api             |
 | Documentation: | https://github.com/gaodayihao/QSanguosha/wiki (Chinese) |
 
 Third party evaluations of development process
@@ -14,9 +14,9 @@ Third party evaluations of development process
 
 [![Issue Stats](http://issuestats.com/github/QSanguosha/QSanguosha-For-Hegemony/badge/issue?style=flat)](http://issuestats.com/github/QSanguosha/QSanguosha-For-Hegemony)
 
-Lisense
+License
 ------------
-###Code
+### Code
 This game is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation; either version 3.0
@@ -29,7 +29,7 @@ General Public License for more details.
 
 See the LICENSE file for more details.
 
-###Material
+### Material
 Our Materials are under the terms of the Creative Commons
 Attribution-NonCommercial-NoDerivatives 4.0 International (CC
 BY-NC-ND 4.0)
@@ -79,7 +79,7 @@ Features
     * Keyboard shortcut
     * Double-click to use cards
     * Cards sorting (by card type and card suit)
-    * Multilayer display when cards are more than an upperlimit
+    * Multilayer display when cards are more than an upper-limit
 
 3. Extensible
     * Some MODs are available based on this game
@@ -91,7 +91,7 @@ This repo is forked by Zhipei Yan and the mod is now managed by cmake rather tha
 
 Windows/Linux/Mac are supported. Temporarily removed support for iOS/android/WinRT
 
-1. Install your preferred dev environment: CLion, VSCode, Visual Studio, Xcode, or etc.
+1. Install your preferred dev environment: CLion (recommended), VSCode, Visual Studio, Xcode, or etc.
 2. Install your toolchain like gcc, clang, msvc, mingw. <br>Debian: `apt install build-essential gdb` <br>Mac: install Xcode and Xcode commandline tools <br>Windows: install MSVC or MinGW
 3. Install Qt5 (just core components, qtcreator is not required): <br>Debian: `apt install qtbase5-dev qtchooser qttools5-dev-tools` <br> Windows/mac: https://www.qt.io/download-qt-installer
 4. Install dependencies: <br>Debian: `apt install liblua5.4-dev libfreetype-dev` <br>Mac: `brew install lua freetype` <br>Windows: libs included in the repo

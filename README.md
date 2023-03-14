@@ -87,16 +87,39 @@ Features
 
 HOW TO BUILD
 =========
-This repo is forked by Zhipei Yan and the mod is now managed by cmake rather than qmake.
+This repo is forked by Zhipei Yan and the mod is now managed by CMake rather than QMake.
 
 Windows/Linux/Mac are supported. Temporarily removed support for iOS/android/WinRT
 
-1. Install your preferred dev environment: CLion (recommended), VSCode, Visual Studio, Xcode, or etc.
-2. Install your toolchain like gcc, clang, msvc, mingw. <br>Debian: `apt install build-essential gdb` <br>Mac: install Xcode and Xcode commandline tools <br>Windows: install MSVC or MinGW
-3. Install Qt5 (just core components, qtcreator is not required): <br>Debian: `apt install qtbase5-dev qtchooser qttools5-dev-tools` <br> Windows/mac: https://www.qt.io/download-qt-installer
-4. Install dependencies: <br>Debian: `apt install liblua5.4-dev libfreetype-dev` <br>Mac: `brew install lua freetype` <br>Windows: libs included in the repo
-5. Use your IDE or cmake to open CMakeLists.txt and configure the project
-6. [Windows only] Change the path of Qt in CMakeLists.txt to your installation path
-7. Change "Working Directory" to the root folder of the repo in your IDE
-8. [Windows only] Copy Qt5Core[d].dll, Qt5Gui[d].dll, Qt5Network[d].dll, Qt5Widgets[d].dll to the root folder of the repo. Copy fmod[L].dll, freetype.dll and vlx_x64.dll from the 3rd-party to the root folder of the repo.
-9. Build and run the game.
+Dependency
+----------
+The source code will need `Qt5`, `lua`, `freetype`, `fmod`, `vld` libs.
+1. Install your toolchain: 
+   * Debian: `apt install build-essential gdb` 
+   * Mac: install Xcode and Xcode commandline tools
+   * Windows: install MSVC or MinGW
+2. Install your dev environment:
+   * CLion (recommended), VSCode, Visual Studio, Xcode, or etc.
+   * If your IDE does not have CMake integrated, install CMake
+3. Install Qt5 (qtcreator is not required):
+   * Debian: `apt install qtbase5-dev qtchooser qttools5-dev-tools`
+   * Windows/Mac: https://www.qt.io/download-qt-installer
+4. Install other dependencies, binaries of `fmod` are included in the repo
+   * Debian: `apt install liblua5.4-dev libfreetype-dev`
+   * Mac: `brew install lua freetype`
+   * Windows: libs included in the repo
+
+Build
+-----
+1. Use your IDE or cmake to open `CMakeLists.txt` and configure the project
+2. [Windows only] Change the path of Qt in `CMakeLists.txt` to your installation path
+3. Change "Working Directory" to the root folder of the repo in your IDE
+4. [Windows only] Copy runtime libs, [?] is the debug suffix:
+   * Copy `Qt5Core[d].dll, Qt5Gui[d].dll, Qt5Network[d].dll, Qt5Widgets[d].dll` from your Qt installation to the root folder of the repo
+   * Copy `fmod[L].dll, freetype.dll and vlx_x64.dll` from the 3rd-party to the root folder of the repo
+   * Copy `qwindows[d].dll` from `${QT_DIR}/plugins/platforms` to **${path_to_your_built_qsanguosha.exe}/platforms/qwindows[d].dll**
+5. Build and run the game.
+
+Release
+-------
+//TODO

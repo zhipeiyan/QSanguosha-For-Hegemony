@@ -23,7 +23,6 @@
 #endif
 
 #include <QFile>
-#include <QCoreApplication>
 #include <QApplication>
 #include <QTranslator>
 #include <QDateTime>
@@ -72,18 +71,10 @@ int main(int argc, char *argv[])
 {
     bool noGui = argc > 1 && strcmp(argv[1], "-server") == 0;
 
-    if (noGui)
-        static QCoreApplication app(argc, argv);
-    else
-        static QApplication app(argc, argv);
-
-    bool noSplash = noGui;
-#if defined(Q_OS_MAC) || defined(Q_OS_ANDROID)
-    noSplash = true;
-#endif
+    QApplication app(argc, argv);
 
     QSplashScreen *splash = nullptr;
-    if (!noSplash) {
+    if (!noGui) {
         QPixmap raraLogo;
         QDate currentDate = QDate::currentDate();
         if (currentDate.month() == 11 && currentDate.day() == 30)
@@ -93,15 +84,16 @@ int main(int argc, char *argv[])
 
         splash = new QSplashScreen(raraLogo);
         splash->show();
-        qApp->processEvents();
+        QApplication::processEvents();
     }
-#define showSplashMessage(message) \
-    if (noSplash) {\
-        qInfo() << message.toUtf8().constData();\
-    } else {\
-        splash->showMessage(message, Qt::AlignBottom | Qt::AlignHCenter, Qt::cyan);\
-        qApp->processEvents();\
-    }
+    auto showSplashMessage = [splash](const QString &message) {
+        if (splash) {
+            splash->showMessage(message, Qt::AlignBottom | Qt::AlignHCenter, Qt::cyan);
+            QApplication::processEvents();
+        } else {
+            qInfo() << message.toUtf8().constData();
+        }
+    };
 
 #ifdef USE_BREAKPAD
     showSplashMessage(QSplashScreen::tr("Loading BreakPad..."));
@@ -156,18 +148,15 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    // initialize random seed for later use
-    qsrand(QTime(0, 0, 0).secsTo(QTime::currentTime()));
-
     // load the main translation file first for we need to translate messages of splash.
     QTranslator translator;
     translator.load("sanguosha.qm");
-    qApp->installTranslator(&translator);
+    QApplication::installTranslator(&translator);
 
     showSplashMessage(QSplashScreen::tr("Loading translation..."));
     QTranslator qt_translator;
     qt_translator.load("qt_zh_CN.qm");
-    qApp->installTranslator(&qt_translator);
+    QApplication::installTranslator(&qt_translator);
 
     showSplashMessage(QSplashScreen::tr("Initializing game engine..."));
     new Settings;
@@ -180,12 +169,11 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_ANDROID
         f.setPointSize(12);
 #endif
-        qApp->setFont(f);
+        QApplication::setFont(f);
     }
 
-    if (qApp->arguments().contains("-server")) {
-        Server server(qApp);
-        printf("Server is starting on port %u\n", Config.ServerPort);
+    if (QApplication::arguments().contains("-server")) {
+        Server server(&app);
         qInfo() << "Server is starting on port " << Config.ServerPort;
 
         if (server.listen())
@@ -193,56 +181,60 @@ int main(int argc, char *argv[])
         else
             qInfo() << "Starting failed!";
 
-        return qApp->exec();
+        return QApplication::exec();
     }
-
-    showSplashMessage(QSplashScreen::tr("Loading style sheet..."));
-    QFile file("style-sheet/sanguosha.qss");
-    QString styleSheet;
-    if (file.open(QIODevice::ReadOnly)) {
-        QTextStream stream(&file);
-        styleSheet = stream.readAll();
-    }
+    else
+    {
+        showSplashMessage(QSplashScreen::tr("Loading style sheet..."));
+        QFile file("style-sheet/sanguosha.qss");
+        QString styleSheet;
+        if (file.open(QIODevice::ReadOnly)) {
+            QTextStream stream(&file);
+            styleSheet = stream.readAll();
+        }
 
 #ifdef Q_OS_WIN
-    QFile winFile("style-sheet/windows-extra.qss");
-    if (winFile.open(QIODevice::ReadOnly)) {
-        QTextStream winStream(&winFile);
-        styleSheet += winStream.readAll();
-    }
+        QFile winFile("style-sheet/windows-extra.qss");
+        if (winFile.open(QIODevice::ReadOnly)) {
+            QTextStream winStream(&winFile);
+            styleSheet += winStream.readAll();
+        }
 #endif
 
-    qApp->setStyleSheet(styleSheet + StyleHelper::styleSheetOfTooltip());
+        app.setStyleSheet(styleSheet + StyleHelper::styleSheetOfTooltip());
 
 #ifdef AUDIO_SUPPORT
-    showSplashMessage(QSplashScreen::tr("Initializing audio module..."));
-    Audio::init();
+        showSplashMessage(QSplashScreen::tr("Initializing audio module..."));
+        Audio::init();
 #else
-    if (!noGui)
         QMessageBox::warning(NULL, QMessageBox::tr("Warning"), QMessageBox::tr("Audio support is disabled when compiled"));
 #endif
 
-    showSplashMessage(QSplashScreen::tr("Loading main window..."));
-    MainWindow main_window;
+        showSplashMessage(QSplashScreen::tr("Loading main window..."));
+        MainWindow main_window;
 
-    Sanguosha->setParent(&main_window);
-    main_window.show();
-    if (splash) {
-        splash->finish(&main_window);
-        delete splash;
-    }
-
-    foreach (const QString &_arg, qApp->arguments()) {
-        QString arg = _arg;
-        if (arg.startsWith("-connect:")) {
-            arg.remove("-connect:");
-            Config.HostAddress = arg;
-            Config.setValue("HostAddress", arg);
-
-            main_window.startConnection();
-            break;
+        Sanguosha->setParent(&main_window);
+        main_window.show();
+        if (splash)
+        {
+            splash->finish(&main_window);
+            delete splash;
         }
-    }
 
-    return qApp->exec();
+        foreach (const QString &_arg, QApplication::arguments())
+        {
+            QString arg = _arg;
+            if (arg.startsWith("-connect:"))
+            {
+                arg.remove("-connect:");
+                Config.HostAddress = arg;
+                Config.setValue("HostAddress", arg);
+
+                main_window.startConnection();
+                break;
+            }
+        }
+
+        return QApplication::exec();
+    }
 }

@@ -28,7 +28,6 @@
 #include <QTranslator>
 #include <QDateTime>
 #include <QSplashScreen>
-#include <QMessageBox>
 
 #include "server.h"
 #include "settings.h"
@@ -74,9 +73,9 @@ int main(int argc, char *argv[])
     bool noGui = argc > 1 && strcmp(argv[1], "-server") == 0;
 
     if (noGui)
-        new QCoreApplication(argc, argv);
+        static QCoreApplication app(argc, argv);
     else
-        new QApplication(argc, argv);
+        static QApplication app(argc, argv);
 
 #if defined(Q_OS_MAC) || defined(Q_OS_ANDROID)
 #define showSplashMessage(message)
@@ -97,11 +96,11 @@ int main(int argc, char *argv[])
     }
 #define showSplashMessage(message) \
     if (splash == NULL) {\
-        puts(message.toUtf8().constData());\
-        } else {\
+        qInfo() << message.toUtf8().constData();\
+    } else {\
         splash->showMessage(message, Qt::AlignBottom | Qt::AlignHCenter, Qt::cyan);\
         qApp->processEvents();\
-        }
+    }
 #endif
 
 #ifdef USE_BREAKPAD
@@ -185,10 +184,11 @@ int main(int argc, char *argv[])
     }
 
     if (qApp->arguments().contains("-server")) {
-        Server *server = new Server(qApp);
+        Server server(qApp);
         printf("Server is starting on port %u\n", Config.ServerPort);
+        qInfo()<<"Server is starting on port " << Config.ServerPort;
 
-        if (server->listen())
+        if (server.listen())
             printf("Starting successfully\n");
         else
             printf("Starting failed!\n");

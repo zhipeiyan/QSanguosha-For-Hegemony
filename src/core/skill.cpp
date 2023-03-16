@@ -684,6 +684,10 @@ const ViewAsSkill *DistanceSkill::getViewAsSkill() const
     return view_as_skill;
 }
 
+DistanceSkill::~DistanceSkill() {
+    delete view_as_skill;
+}
+
 ShowDistanceSkill::ShowDistanceSkill(const QString &name)
     : ZeroCardViewAsSkill(name)
 {

@@ -317,6 +317,7 @@ class DistanceSkill : public Skill
 
 public:
     DistanceSkill(const QString &name);
+    ~DistanceSkill();
 
     virtual int getCorrect(const Player *from, const Player *to) const = 0;
     const ViewAsSkill *getViewAsSkill() const;

@@ -77,12 +77,13 @@ int main(int argc, char *argv[])
     else
         static QApplication app(argc, argv);
 
+    bool noSplash = noGui;
 #if defined(Q_OS_MAC) || defined(Q_OS_ANDROID)
-#define showSplashMessage(message)
-#define SPLASH_DISABLED
-#else
-    QSplashScreen *splash = NULL;
-    if (!noGui) {
+    noSplash = true;
+#endif
+
+    QSplashScreen *splash = nullptr;
+    if (!noSplash) {
         QPixmap raraLogo;
         QDate currentDate = QDate::currentDate();
         if (currentDate.month() == 11 && currentDate.day() == 30)
@@ -95,13 +96,12 @@ int main(int argc, char *argv[])
         qApp->processEvents();
     }
 #define showSplashMessage(message) \
-    if (splash == NULL) {\
+    if (noSplash) {\
         qInfo() << message.toUtf8().constData();\
     } else {\
         splash->showMessage(message, Qt::AlignBottom | Qt::AlignHCenter, Qt::cyan);\
         qApp->processEvents();\
     }
-#endif
 
 #ifdef USE_BREAKPAD
     showSplashMessage(QSplashScreen::tr("Loading BreakPad..."));
@@ -186,12 +186,12 @@ int main(int argc, char *argv[])
     if (qApp->arguments().contains("-server")) {
         Server server(qApp);
         printf("Server is starting on port %u\n", Config.ServerPort);
-        qInfo()<<"Server is starting on port " << Config.ServerPort;
+        qInfo() << "Server is starting on port " << Config.ServerPort;
 
         if (server.listen())
-            printf("Starting successfully\n");
+            qInfo() << "Starting successfully";
         else
-            printf("Starting failed!\n");
+            qInfo() << "Starting failed!";
 
         return qApp->exec();
     }
@@ -227,12 +227,10 @@ int main(int argc, char *argv[])
 
     Sanguosha->setParent(&main_window);
     main_window.show();
-#ifndef SPLASH_DISABLED
-    if (splash != NULL) {
+    if (splash) {
         splash->finish(&main_window);
         delete splash;
     }
-#endif
 
     foreach (const QString &_arg, qApp->arguments()) {
         QString arg = _arg;

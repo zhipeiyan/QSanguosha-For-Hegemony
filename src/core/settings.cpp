@@ -30,6 +30,7 @@
 #include <QApplication>
 #include <QNetworkInterface>
 #include <QDateTime>
+#include <QCommandLineParser>
 
 Settings *SettingsInstance = NULL;
 
@@ -59,7 +60,13 @@ Settings::Settings()
 
 void Settings::init()
 {
-    if (!qApp->arguments().contains("-server")) {
+    QCommandLineParser parser;
+    // A boolean option with multiple names (-s, --server)
+    parser.addOption({{"s", "server"},QApplication::translate("settings", "Server mode.")});
+    parser.process(*qApp);
+    bool serverMode = parser.isSet("server");
+
+    if (!serverMode) {
         QString font_path = value("DefaultFontPath", "font/simli.ttf").toString();
         int font_id = QFontDatabase::addApplicationFont(font_path);
         if (font_id != -1) {

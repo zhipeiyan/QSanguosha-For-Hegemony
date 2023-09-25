@@ -40,6 +40,7 @@
 #include <QDir>
 #include <QFile>
 #include <QApplication>
+#include <QCommandLineParser>
 
 Engine *Sanguosha = NULL;
 
@@ -326,7 +327,13 @@ QList<const Package *> Engine::getPackages() const
 
 QStringList Engine::getBanPackages() const
 {
-    if (qApp->arguments().contains("-server"))
+    QCommandLineParser parser;
+    // A boolean option with multiple names (-s, --server)
+    parser.addOption({{"s", "server"},QApplication::translate("settings", "Server mode.")});
+    parser.process(*qApp);
+    bool serverMode = parser.isSet("server");
+
+    if (serverMode)
         return Config.BanPackages;
     else
         return ban_package.toList();

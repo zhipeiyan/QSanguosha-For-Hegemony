@@ -24,6 +24,7 @@
 
 #include <QFile>
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QTranslator>
 #include <QDateTime>
 #include <QSplashScreen>
@@ -69,25 +70,34 @@ static bool callback(const wchar_t *, const wchar_t *id, void *, EXCEPTION_POINT
 
 int main(int argc, char *argv[])
 {
-    bool noGui = argc > 1 && strcmp(argv[1], "-server") == 0;
-
     QApplication app(argc, argv);
+    QApplication::setApplicationName("QSanguosha");
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Helper");
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addOptions({
+        // A boolean option with multiple names (-s, --server)
+        {{"s", "server"},QApplication::translate("main", "Server mode.")},
+        // An option with a value
+        {{"c", "connect"},
+         QApplication::translate("main", "Connect to server <host-address>."),
+         QApplication::translate("main", "host-address")},
+    });
+    parser.process(app);
+
+    bool serverMode = parser.isSet("server");
 
     QSplashScreen *splash = nullptr;
-    if (!noGui) {
-        QPixmap raraLogo;
-        QDate currentDate = QDate::currentDate();
-        if (currentDate.month() == 11 && currentDate.day() == 30)
-            raraLogo.load("image/system/developers/logo_rara.png");
-        else
-            raraLogo.load("image/system/developers/logo.png");
-
+    if (!serverMode) {
+        QPixmap raraLogo("image/system/developers/logo.png");
         splash = new QSplashScreen(raraLogo);
         splash->show();
         QApplication::processEvents();
     }
-    auto showSplashMessage = [splash](const QString &message) {
-        if (splash) {
+    auto showSplashMessage = [serverMode, splash](const QString &message) {
+        if (!serverMode) {
             splash->showMessage(message, Qt::AlignBottom | Qt::AlignHCenter, Qt::cyan);
             QApplication::processEvents();
         } else {
@@ -164,7 +174,7 @@ int main(int argc, char *argv[])
 
     showSplashMessage(QSplashScreen::tr("Loading user's configurations..."));
     Config.init();
-    if (!noGui) {
+    if (!serverMode) {
         QFont f = Config.AppFont;
 #ifdef Q_OS_ANDROID
         f.setPointSize(12);
@@ -172,7 +182,7 @@ int main(int argc, char *argv[])
         QApplication::setFont(f);
     }
 
-    if (QApplication::arguments().contains("-server")) {
+    if (serverMode) {
         Server server(&app);
         qInfo() << "Server is starting on port " << Config.ServerPort;
 
@@ -212,27 +222,15 @@ int main(int argc, char *argv[])
 
         showSplashMessage(QSplashScreen::tr("Loading main window..."));
         MainWindow main_window;
-
         Sanguosha->setParent(&main_window);
         main_window.show();
-        if (splash)
-        {
-            splash->finish(&main_window);
-            delete splash;
-        }
+        splash->finish(&main_window);
+        delete splash;
 
-        foreach (const QString &_arg, QApplication::arguments())
+        if (parser.isSet("connect"))
         {
-            QString arg = _arg;
-            if (arg.startsWith("-connect:"))
-            {
-                arg.remove("-connect:");
-                Config.HostAddress = arg;
-                Config.setValue("HostAddress", arg);
-
-                main_window.startConnection();
-                break;
-            }
+            Config.HostAddress = parser.value("connect");
+            Config.setValue("HostAddress", parser.value("connect"));
         }
 
         return QApplication::exec();

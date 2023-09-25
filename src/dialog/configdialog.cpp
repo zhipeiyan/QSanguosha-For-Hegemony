@@ -317,7 +317,7 @@ void ConfigDialog::on_browseBgButton_clicked()
 
 void ConfigDialog::on_resetBgButton_clicked()
 {
-    QString fileName = "image/backdrop/bg.jpg";
+    QString fileName = "image/backdrop/bg.png";
     if (fileName != ui->bgPathLineEdit->text())
         doCallback(&ConfigDialog::setBackground, Config.BackgroundImage, fileName);
 }
@@ -335,7 +335,7 @@ void ConfigDialog::on_browseTableBgButton_clicked()
 
 void ConfigDialog::on_resetTableBgButton_clicked()
 {
-    QString fileName = "image/backdrop/table.jpg";
+    QString fileName = "image/backdrop/table.png";
     if (fileName != ui->tableBgPathLineEdit->text())
         doCallback(&ConfigDialog::setTableBg, Config.TableBgImage, fileName);
 }
